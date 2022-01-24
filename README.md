@@ -6,7 +6,7 @@ Data sources:
 - Historical data (Weather data: KNMI, Traffic data: Data Overheid NL)
 - Real time Data (AccuWeather API) <br>
 
-![Workflow](/TrafficProject.png){:height="36px" width="36px"}
+![Workflow](/TrafficProject.png
 
 ETL:
 - Extract data from weather API
