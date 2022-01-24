@@ -22,4 +22,6 @@ Database Schema:
   - windspeed
   - temperature
   - precipitation
- 
+ <br>
+ Airflow DAG: <br>
+ create_db >> insert_into_weather >> insert_into_traffic
