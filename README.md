@@ -6,10 +6,14 @@ Data sources:
 - Historical data (Weather data: KNMI, Traffic data: Data Overheid NL)
 - Real time Data (AccuWeather API) <br>
 
+![Workflow](/TrafficProject.png)
+
 ETL:
 - Extract data from weather API
 - Transform into appropriate format to give as input to trained ML model.
 - Load to PostgreSQL database 
+
+![ETL](/TrafficETL.png)
 
 Database Schema:
 - Traffic table (Fact table)
