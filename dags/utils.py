@@ -137,12 +137,16 @@ def convert_to_celc(fahrenheit):
     return int((fahrenheit - 32)* (5/9))
 
 
-def extract_weather_data(location_url = 'http://dataservice.accuweather.com/locations/v1/cities/search/', query = 'Utrecht'):
+def extract_weather_data(filename, query = 'Utrecht'):
 
     
-    api_key = 'nPQT2nMFQG3ghVYazkU5jQ0P58DsVPNn'
+    config = ConfigParser()
+    config.read(filename)
+    api_key = config['api']['key']
+    location_url = config['api']['location_url']
+    forecast_url = config['api']['forecast_url']
     
-
+    
     response = requests.get(location_url, params={'apikey':api_key, 'q': query, 'details': False})
 
     
@@ -164,7 +168,9 @@ def extract_weather_data(location_url = 'http://dataservice.accuweather.com/loca
         raise Exception('Problem with API. Try again later!')
 
 
-    forecast_api = f'http://dataservice.accuweather.com/forecasts/v1/hourly/12hour/{location_key}'
+    forecast_url = config['api']['forecast_url'] + str(location_key)
+    
+    
     response = requests.get(forecast_api, params={'apikey':api_key, "details": True})
     content = json.loads(response.content)
 
