@@ -1,5 +1,6 @@
 import psycopg2
 from psycopg2 import Error
+import logging
 from configparser import ConfigParser
 import requests
 import json
@@ -9,6 +10,8 @@ import pickle
 from airflow.models import Variable
 import datetime
 import os
+logging.basicConfig(level = logging.INFO,
+format = '%(asctime)s:%(levelname)s:%(message)s')
 
 from airflow.hooks.postgres_hook import PostgresHook
 
@@ -68,19 +71,19 @@ def connect_to_db():
         # Create a cursor to perform database operations
         cursor = connection.cursor()
         # Print PostgreSQL details
-        print("PostgreSQL server information")
-        print(connection.get_dsn_parameters(), "\n")
+        logging.info("PostgreSQL server information: ")
+        logging.info(connection.get_dsn_parameters())
         # Executing a SQL query
         cursor.execute("SELECT version();")
         # Fetch result
         record = cursor.fetchone()
-        print("You are connected to - ", record, "\n")
+        logging.info(f"\n You are connected to - {record} \n")
         
         return cursor, connection
     
     
     except (Exception, Error) as error:
-        print("Error while connecting to PostgreSQL", error)
+        logging.error(f"Error while connecting to PostgreSQL {error}")
 
     
     
@@ -109,7 +112,7 @@ def create_db():
         cursor.execute(sql_query)
         connection.commit()
         
-        print('Database: Weather created!')
+        logging.info('Database: Weather created!')
         sql_query = """
             
             CREATE TABLE IF NOT EXISTS Traffic
@@ -123,7 +126,7 @@ def create_db():
         cursor.execute(sql_query)
         connection.commit()
 
-        print('Database: Traffic created!')
+        logging.info('Database: Traffic created!')
     
 
         cursor.close()
@@ -171,7 +174,7 @@ def extract_weather_data(filename, query = 'Utrecht'):
     forecast_url = config['api']['forecast_url'] + str(location_key)
     
     
-    response = requests.get(forecast_api, params={'apikey':api_key, "details": True})
+    response = requests.get(forecast_url, params={'apikey':api_key, "details": True})
     content = json.loads(response.content)
 
     weather_data = pd.DataFrame(columns = ['DateTime','WindSpeed','Temperature', 'Precipitation'])
@@ -259,18 +262,22 @@ def insert_into_traffic_db():
     
     cursor, connection = connect_to_db()
 
-    for i in range(len(df_traffic)):
-        
-        sql_query = """INSERT INTO Traffic(date_id, Intensity) 
-                                VALUES ( (SELECT id FROM weather WHERE datetime = '{}') , {})
-                                ON CONFLICT DO NOTHING;
-                                """.format(df_traffic.DateTime[i].strftime("%Y-%m-%d %H:%M:%S %z"), 
-                                df_traffic['Intensity'][i] * 10)
-        
-        cursor.execute(sql_query)
-        connection.commit()
+    try:
 
+        for i in range(len(df_traffic)):
+            
+            sql_query = """INSERT INTO Traffic(date_id, Intensity) 
+                                    VALUES ( (SELECT id FROM weather WHERE datetime = '{}') , {})
+                                    ON CONFLICT DO NOTHING;
+                                    """.format(df_traffic.DateTime[i].strftime("%Y-%m-%d %H:%M:%S %z"), 
+                                    df_traffic['Intensity'][i] * 10)
+            
+            cursor.execute(sql_query)
+            connection.commit()
+
+    except:
+        logging.error('Insert Query failed!')
+        raise Exception('Query failed!')
+    
     cursor.close()
     connection.close()
-
-
